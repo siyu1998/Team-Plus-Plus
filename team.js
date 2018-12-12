@@ -8,10 +8,10 @@ var username = null;
 var userID = null;
 var taskCount = 0;
 var description = "Not defined";
-
 var currTime = null;
 var oldEventName = null;
 var eventNum = 0;
+var adminId = null;
 
 async function getIndividualTask(ref) {
   var taskDoer;
@@ -91,7 +91,6 @@ async function getTeamDes(ref) {
     description = snapshot.val();
   });
 }
-
 
 // Gets the current time for timestamp
 async function getCurrTime(ref) {
@@ -423,12 +422,17 @@ async function addMember() {
 
           // Iterate thtough list of members creating a direct message between them and the new member
           memref.on("child_added", snapshot => {
-            DMref.child(person).child(snapshot.key).set({
-              mostRecent: "Send your messages here.",
-              name: snapshot.val()[0],
-              userId: snapshot.key
-            });
-            newPostRef = DMref.child(person).child(snapshot.key).child("msgArray").push();
+            DMref.child(person)
+              .child(snapshot.key)
+              .set({
+                mostRecent: "Send your messages here.",
+                name: snapshot.val()[0],
+                userId: snapshot.key
+              });
+            newPostRef = DMref.child(person)
+              .child(snapshot.key)
+              .child("msgArray")
+              .push();
             newPostRef.set({
               sender: "Admin",
               message: "Send your messages here.",
@@ -517,7 +521,6 @@ async function leaveTeam() {
     window.location = "team.html";
   } else alert("Cancelled");
 }
-
 
 async function assignRole(uid) {
   //get the user name
@@ -675,19 +678,12 @@ async function updateView() {
         var thirdCell = row.insertCell(2);
         var fourthCell = row.insertCell(3);
         var fifthCell = row.insertCell(4);
-        var sixthCell = row.insertCell(5);
-
-        var deleteButton = document.createElement("button");
-        var buttonName = document.createTextNode("Delete");
-        deleteButton.appendChild(buttonName);
-        sixthCell.appendChild(deleteButton);
-        deleteButton.onclick = function() {
-          deleteEvent(eventName);
-        };
+        //var sixthCell = row.insertCell(5);
 
         var editButton = document.createElement("button");
         var buttonName1 = document.createTextNode("Edit");
         editButton.appendChild(buttonName1);
+        editButton.style = "background-color: #5cb85c; color: #ffffff; border-radius: 5px;"
         fifthCell.appendChild(editButton);
         editButton.onclick = function() {
           onClickEditEvent(
@@ -697,6 +693,15 @@ async function updateView() {
             eventStartTime,
             eventEndTime
           );
+        };
+
+        var deleteButton = document.createElement("button");
+        var buttonName = document.createTextNode("Delete");
+        deleteButton.appendChild(buttonName);
+        deleteButton.style = "background-color: #5cb85c; color: #ffffff; border-radius: 5px;"
+        fifthCell.appendChild(deleteButton);
+        deleteButton.onclick = function() {
+          deleteEvent(eventName);
         };
 
         firstCell.innerHTML = eventDate;
@@ -1022,19 +1027,13 @@ function eventSaveHelper(
   var thirdCell = row.insertCell(2);
   var fourthCell = row.insertCell(3);
   var fifthCell = row.insertCell(4);
-  var sixthCell = row.insertCell(5);
+//  var sixthCell = row.insertCell(5);
 
-  var deleteButton = document.createElement("button");
-  var buttonName = document.createTextNode("Delete");
-  deleteButton.appendChild(buttonName);
-  sixthCell.appendChild(deleteButton);
-  deleteButton.onclick = function() {
-    deleteEvent(eventName);
-  };
 
   var editButton = document.createElement("button");
   var buttonName1 = document.createTextNode("Edit");
   editButton.appendChild(buttonName1);
+  editButton.style = "background-color: #5cb85c; color: #ffffff; border-radius: 5px;"
   fifthCell.appendChild(editButton);
   editButton.onclick = function() {
     onClickEditEvent(
@@ -1044,6 +1043,15 @@ function eventSaveHelper(
       eventStartTime,
       eventEndTime
     );
+  };
+
+  var deleteButton = document.createElement("button");
+  var buttonName = document.createTextNode("Delete");
+  deleteButton.appendChild(buttonName);
+  deleteButton.style = "background-color: #5cb85c; color: #ffffff; border-radius: 5px;"
+  fifthCell.appendChild(deleteButton);
+  deleteButton.onclick = function() {
+    deleteEvent(eventName);
   };
 
   firstCell.innerHTML = eventDate;
@@ -1062,11 +1070,11 @@ function eventSave() {
 
   //Check for valid information
   if (eventName == "" || /^\s+$/.test(eventName)) {
-    alert("The event is missing a name. Please add a name !");
+    alert("The event is missing a name. Please add a name.");
   } else if (eventDescription == "" || /^\s+$/.test(eventDescription)) {
-    alert("The event is missing a description. Please add a description !");
+    alert("The event is missing a description. Please add a description.");
   } else if (eventEndTime < eventStartTime) {
-    alert("The event ends before it even starts. Please change the time !");
+    alert("The event ends before it even starts. Please change the time.");
   } else if (eventNum == 0) {
     alert("You have successfully created the event.");
     eventSaveHelper(
@@ -1083,7 +1091,7 @@ function eventSave() {
 
       if (eventName == name) {
         alert(
-          "There is already another event with the same name. Please change the name of the current event"
+          "There is already another event with the same name. Please change the name of the current event."
         );
       } else {
         alert("You have successfully created the event.");
@@ -1097,4 +1105,28 @@ function eventSave() {
       }
     });
   }
+}
+
+async function getAdminID(ref){
+  return ref.once('value').then(function(snapshot){
+    adminId = snapshot.val();
+    console.log(adminId);
+  })
+}
+
+async function changeView(){
+  var item = document.getElementById("move");
+  var ref = firebase.database().ref("Users/" + userID + "/currTeam");
+  await getCurrTeam(ref);
+  var aRef = firebase.database().ref("Team/" + cuTeam + "/admin");
+  await getAdminID(aRef);
+  if(adminId == userID){
+    console.log("Should not be printed");
+    item.href = "HomePage.html";
+  }
+  else{
+    item.href = "HomePageMem.html";
+    console.log("Should be printed");
+  } 
+
 }
